@@ -1,5 +1,5 @@
 module.exports = async (req, res) => {
-  const shopifyDomain = "entryleveljobs.onlinejob247.com";
+  const shopifyDomain = "frontendnode-production.up.railway.app";
   const proxyHost = req.headers.host;
 
   const targetURL = `https://${shopifyDomain}${req.url}`;
