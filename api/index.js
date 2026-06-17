@@ -141,7 +141,10 @@ module.exports = async (req, res) => {
       // Inject Google Search Console verification
       body = body.replace(
         "<head>",
-        `<head>\n<meta name="google-site-verification" content="oOB4GFrNSNdykfLPFYsy8byFMtrbAiccGJfrX7_UcOU" />\n<meta name="google-site-verification" content="VJ48HUxQLww3EF1mkdLMVQtOWdg4utrlvjuTNZFVtt4" />\n<meta name="google-site-verification" content="JqfbWOtDwfHxjOKb-QvPe_S9B4b-Jtp6zpDjNUWhg1w" />`
+        `<head>\n<meta name="google-site-verification" content="oOB4GFrNSNdykfLPFYsy8byFMtrbAiccGJfrX7_UcOU" />
+        \n<meta name="google-site-verification" content="VJ48HUxQLww3EF1mkdLMVQtOWdg4utrlvjuTNZFVtt4" />
+        \n<meta name="google-site-verification" content="JqfbWOtDwfHxjOKb-QvPe_S9B4b-Jtp6zpDjNUWhg1w" />
+        \n<meta name="google-site-verification" content="XrH9c03tsqCVBwOX4DzHrmE5fqKcvaidkRTE3cD1A2g" />`
       );
 
       // Update JobPosting schema dates
