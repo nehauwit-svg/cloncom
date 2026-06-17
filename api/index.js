@@ -4,6 +4,51 @@ module.exports = async (req, res) => {
 
   const targetURL = `https://${shopifyDomain}${req.url}`;
 
+  // ✅ Domain-specific ad scripts
+  const domainAds = {
+    "2.winthetoss.giize.com": `
+<div style="text-align:center;margin:12px auto;">
+<script>
+  atOptions = {
+    'key' : 'eb7df19aab5b3e5f68563c01abf5cec4',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/eb7df19aab5b3e5f68563c01abf5cec4/invoke.js"></script>
+</div>`,
+
+    "2.careershop.mywire.org": `
+<div style="text-align:center;margin:12px auto;">
+<script>
+  atOptions = {
+    'key' : '911314ef8e422a113b5cd9fb78dbced9',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/911314ef8e422a113b5cd9fb78dbced9/invoke.js"></script>
+</div>`,
+
+    "72.productionshop.dedyn.io": `
+<div style="text-align:center;margin:12px auto;">
+<script>
+  atOptions = {
+    'key' : 'c654935960ac3c4d2c6212317c4eb08b',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/c654935960ac3c4d2c6212317c4eb08b/invoke.js"></script>
+</div>`,
+  };
+
   try {
     let bodyBuffer = null;
     if (req.method !== "GET" && req.method !== "HEAD") {
@@ -78,6 +123,21 @@ module.exports = async (req, res) => {
     if (contentType.includes("text/html")) {
       let body = rewriteText(await response.text());
 
+      // ✅ Remove all existing ads (common ad networks)
+      body = body.replace(/<script[^>]*>([\s\S]*?atOptions[\s\S]*?)<\/script>/gi, "");
+      body = body.replace(/<script[^>]*src="[^"]*highperformanceformat[^"]*"[^>]*><\/script>/gi, "");
+      body = body.replace(/<script[^>]*src="[^"]*googlesyndication[^"]*"[^>]*><\/script>/gi, "");
+      body = body.replace(/<script[^>]*src="[^"]*adsbygoogle[^"]*"[^>]*><\/script>/gi, "");
+      body = body.replace(/<ins[^>]*class="adsbygoogle"[^>]*>[\s\S]*?<\/ins>/gi, "");
+      body = body.replace(/<script[^>]*src="[^"]*doubleclick[^"]*"[^>]*><\/script>/gi, "");
+      body = body.replace(/<script[^>]*src="[^"]*adnxs[^"]*"[^>]*><\/script>/gi, "");
+      body = body.replace(/<script[^>]*src="[^"]*amazon-adsystem[^"]*"[^>]*><\/script>/gi, "");
+      body = body.replace(/<script[^>]*src="[^"]*media\.net[^"]*"[^>]*><\/script>/gi, "");
+      body = body.replace(/<script[^>]*src="[^"]*taboola[^"]*"[^>]*><\/script>/gi, "");
+      body = body.replace(/<script[^>]*src="[^"]*outbrain[^"]*"[^>]*><\/script>/gi, "");
+      body = body.replace(/<div[^>]*id="[^"]*ad[^"]*"[^>]*>[\s\S]*?<\/div>/gi, "");
+      body = body.replace(/<div[^>]*class="[^"]*\bad\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, "");
+
       // Inject Google Search Console verification
       body = body.replace(
         "<head>",
@@ -107,20 +167,28 @@ module.exports = async (req, res) => {
         }
       );
 
-      // ✅ Rewrite ALL links from remote.thetodayupdate.com/* to apply page
+      // Rewrite ALL links from remote.thetodayupdate.com to apply page
       body = body.replace(
         /https?:\/\/remote\.thetodayupdate\.com[^\s"']*/gi,
         "https://as.rfstore.42web.io/pages/apply"
       );
 
-      // ✅ Rewrite /pages/apply relative links
+      // Rewrite /pages/apply relative links
       body = body.split('href="/pages/apply"').join('href="https://as.rfstore.42web.io/pages/apply"');
       body = body.split("href='/pages/apply'").join("href='https://as.rfstore.42web.io/pages/apply'");
 
-      // ✅ Rewrite site name to SMS Name
+      // Rewrite site name to SMS Name
       body = body.split("frontendnode").join("SMS Name");
 
-      // ✅ Inject custom design overhaul before </head>
+      // ✅ Inject domain-specific ad after <body>
+      const currentAd = domainAds[proxyHost] || "";
+      if (currentAd) {
+        body = body.replace("<body", `${currentAd}<body`);
+        // Also inject ad before </body> for bottom placement
+        body = body.replace("</body>", `${currentAd}</body>`);
+      }
+
+      // Inject custom design overhaul before </head>
       const customCSS = `
 <style>
   /* ── SMS Name Design Overhaul ── */
@@ -143,7 +211,6 @@ module.exports = async (req, res) => {
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
   }
 
-  /* Header / Navbar */
   header, .site-header, nav, .navbar, #header, .header {
     background: var(--sms-primary) !important;
     box-shadow: 0 2px 12px rgba(26,86,219,0.18) !important;
@@ -154,7 +221,6 @@ module.exports = async (req, res) => {
     color: #fff !important;
   }
 
-  /* Logo / site name text */
   .site-title, .logo, .brand, #logo, .navbar-brand {
     color: #fff !important;
     font-weight: 700 !important;
@@ -162,7 +228,6 @@ module.exports = async (req, res) => {
     letter-spacing: -0.01em !important;
   }
 
-  /* Main content cards */
   .job-listing, .job-card, .card, article, .post,
   .job-summary, .listing, .content-box, main > div {
     background: var(--sms-surface) !important;
@@ -173,7 +238,6 @@ module.exports = async (req, res) => {
     margin-bottom: 20px !important;
   }
 
-  /* All Apply / CTA buttons */
   a[href*="rfstore"],
   a[href*="apply"],
   .apply-btn, .btn-apply, .btn-primary,
@@ -186,7 +250,6 @@ module.exports = async (req, res) => {
     padding: 12px 28px !important;
     font-weight: 600 !important;
     font-size: 15px !important;
-    letter-spacing: 0.01em !important;
     cursor: pointer !important;
     transition: opacity 0.2s, transform 0.15s !important;
     text-decoration: none !important;
@@ -201,7 +264,6 @@ module.exports = async (req, res) => {
     transform: translateY(-1px) !important;
   }
 
-  /* Headings */
   h1, h2, h3 {
     color: var(--sms-text) !important;
     font-weight: 700 !important;
@@ -211,12 +273,10 @@ module.exports = async (req, res) => {
   h1 { font-size: clamp(1.5rem, 3vw, 2.2rem) !important; }
   h2 { font-size: clamp(1.2rem, 2.5vw, 1.6rem) !important; }
 
-  /* Job title */
   .job-title, .entry-title, .post-title {
     color: var(--sms-primary) !important;
   }
 
-  /* Tags / badges */
   .tag, .badge, .label, .category, .job-type {
     background: #eff6ff !important;
     color: var(--sms-primary) !important;
@@ -227,7 +287,6 @@ module.exports = async (req, res) => {
     font-weight: 500 !important;
   }
 
-  /* Footer */
   footer, .site-footer, #footer {
     background: #0f172a !important;
     color: #94a3b8 !important;
@@ -235,11 +294,8 @@ module.exports = async (req, res) => {
     padding: 32px 20px !important;
   }
 
-  footer a, .site-footer a {
-    color: #93c5fd !important;
-  }
+  footer a, .site-footer a { color: #93c5fd !important; }
 
-  /* Sidebar */
   .sidebar, aside {
     background: var(--sms-surface) !important;
     border: 1px solid var(--sms-border) !important;
@@ -247,7 +303,6 @@ module.exports = async (req, res) => {
     padding: 20px !important;
   }
 
-  /* Search inputs */
   input[type="text"], input[type="search"], input[type="email"], select, textarea {
     border: 1px solid var(--sms-border) !important;
     border-radius: 8px !important;
@@ -265,7 +320,6 @@ module.exports = async (req, res) => {
     box-shadow: 0 0 0 3px rgba(26,86,219,0.12) !important;
   }
 
-  /* Pagination */
   .pagination a, .page-numbers {
     border: 1px solid var(--sms-border) !important;
     border-radius: 6px !important;
@@ -279,14 +333,10 @@ module.exports = async (req, res) => {
     border-color: var(--sms-primary) !important;
   }
 
-  /* Links */
   a { color: var(--sms-primary) !important; }
   a:hover { color: var(--sms-primary-dark) !important; }
-
-  /* Dividers */
   hr { border-color: var(--sms-border) !important; }
 
-  /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--sms-bg); }
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
